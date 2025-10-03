@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Light API Documentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'code-bg': '#f8f9fa',
+                        'code-border': '#e9ecef'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                <h1 class="text-4xl font-bold text-gray-800 mb-2">Traffic Light API Documentation</h1>
+                <p class="text-gray-600 mb-8">Complete API reference for the Traffic Light Control System</p>
+                
+                <div class="mb-8">
+                    <a href="/" class="inline-block px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200">
+                        ← Back to Traffic Light
+                    </a>
+                </div>
+                
+                <!-- Base URL -->
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Base URL</h2>
+                    <div class="bg-code-bg border border-code-border rounded-lg p-4">
+                        <code class="text-sm text-gray-800">http://localhost:5000</code>
+                    </div>
+                </div>
+                
+                <!-- Authentication -->
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Authentication</h2>
+                    <p class="text-gray-600">No authentication required for this API.</p>
+                </div>
+                
+                <!-- Endpoints -->
+                <div class="space-y-12">
+                    <!-- Get Status Endpoint -->
+                    <div class="border-b border-gray-200 pb-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Get Traffic Light Status</h2>
+                        <div class="mb-4">
+                            <span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold mr-2">GET</span>
+                            <code class="text-lg text-gray-700">/api/traffic-light/status</code>
+                        </div>
+                        <p class="text-gray-600 mb-4">Retrieve the current status of the traffic light.</p>
+                        
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">Response</h3>
+                        <div class="bg-code-bg border border-code-border rounded-lg p-4 mb-4">
+                            <pre class="text-sm text-gray-800"><code>{
+  "color": "red",
+  "timestamp": "2024-01-15T10:30:00.123456",
+  "success": true
+}</code></pre>
+                        </div>
+                        
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">Response Fields</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full border-collapse border border-gray-300">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="border border-gray-300 px-4 py-2 text-left">Field</th>
+                                        <th class="border border-gray-300 px-4 py-2 text-left">Type</th>
+                                        <th class="border border-gray-300 px-4 py-2 text-left">Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="border border-gray-300 px-4 py-2">color</td>
+                                        <td class="border border-gray-300 px-4 py-2">string</td>
+                                        <td class="border border-gray-300 px-4 py-2">Current traffic light color (red, yellow, or green)</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border border-gray-300 px-4 py-2">timestamp</td>
+                                        <td class="border border-gray-300 px-4 py-2">string</td>
+                                        <td class="border border-gray-300 px-4 py-2">ISO 8601 timestamp of when the color was last changed</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border border-gray-300 px-4 py-2">success</td>
+                                        <td class="border border-gray-300 px-4 py-2">boolean</td>
+                                        <td class="border border-gray-300 px-4 py-2">Indicates if the request was successful</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2 mt-4">Example Request</h3>
+                        <div class="bg-code-bg border border-code-border rounded-lg p-4">
+                            <pre class="text-sm text-gray-800"><code>curl -X GET http://localhost:5000/api/traffic-light/status</code></pre>
+                        </div>
+                    </div>
+                    
+                    <!-- Set Status Endpoint -->
+                    <div class="border-b border-gray-200 pb-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Set Traffic Light Color</h2>
+                        <div class="mb-4">
+                            <span class="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold mr-2">POST</span>
+                            <code class="text-lg text-gray-700">/api/traffic-light/status</code>
+                        </div>
+                        <p class="text-gray-600 mb-4">Change the traffic light to a specific color.</p>
+                        
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">Request Body</h3>
+                        <div class="bg-code-bg border border-code-border rounded-lg p-4 mb-4">
+                            <pre class="text-sm text-gray-800"><code>{
+  "color": "red"
+}</code></pre>
+                        </div>
+                        
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">Request Fields</h3>
+                        <div class="overflow-x-auto mb-4">
+                            <table class="w-full border-collapse border border-gray-300">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="border border-gray-300 px-4 py-2 text-left">Field</th>
+                                        <th class="border border-gray-300 px-4 py-2 text-left">Type</th>
+                                        <th class="border border-gray-300 px-4 py-2 text-left">Required</th>
+                                        <th class="border border-gray-300 px-4 py-2 text-left">Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="border border-gray-300 px-4 py-2">color</td>
+                                        <td class="border border-gray-300 px-4 py-2">string</td>
+                                        <td class="border border-gray-300 px-4 py-2">Yes</td>
+                                        <td class="border border-gray-300 px-4 py-2">Traffic light color: "red", "yellow", or "green"</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">Success Response (200)</h3>
+                        <div class="bg-code-bg border border-code-border rounded-lg p-4 mb-4">
+                            <pre class="text-sm text-gray-800"><code>{
+  "color": "red",
+  "success": true,
+  "message": "Traffic light set to red",
+  "timestamp": "2024-01-15T10:30:00.123456"
+}</code></pre>
+                        </div>
+                        
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">Error Response (400)</h3>
+                        <div class="bg-code-bg border border-code-border rounded-lg p-4 mb-4">
+                            <pre class="text-sm text-gray-800"><code>{
+  "success": false,
+  "error": "Invalid color. Must be one of: red, yellow, green"
+}</code></pre>
+                        </div>
+                        
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">Example Request</h3>
+                        <div class="bg-code-bg border border-code-border rounded-lg p-4">
+                            <pre class="text-sm text-gray-800"><code>curl -X POST http://localhost:5000/api/traffic-light/status \
+  -H "Content-Type: application/json" \
+  -d '{"color": "green"}'</code></pre>
+                        </div>
+                    </div>
+                    
+                    <!-- Get Valid Colors Endpoint -->
+                    <div class="border-b border-gray-200 pb-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Get Valid Colors</h2>
+                        <div class="mb-4">
+                            <span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold mr-2">GET</span>
+                            <code class="text-lg text-gray-700">/api/traffic-light/colors</code>
+                        </div>
+                        <p class="text-gray-600 mb-4">Get a list of all valid traffic light colors.</p>
+                        
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">Response</h3>
+                        <div class="bg-code-bg border border-code-border rounded-lg p-4 mb-4">
+                            <pre class="text-sm text-gray-800"><code>{
+  "colors": ["red", "yellow", "green"],
+  "success": true
+}</code></pre>
+                        </div>
+                        
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">Example Request</h3>
+                        <div class="bg-code-bg border border-code-border rounded-lg p-4">
+                            <pre class="text-sm text-gray-800"><code>curl -X GET http://localhost:5000/api/traffic-light/colors</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Error Codes -->
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">HTTP Status Codes</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse border border-gray-300">
+                            <thead>
+                                <tr class="bg-gray-50">
+                                    <th class="border border-gray-300 px-4 py-2 text-left">Code</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left">Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="border border-gray-300 px-4 py-2">200</td>
+                                    <td class="border border-gray-300 px-4 py-2">OK - Request successful</td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-gray-300 px-4 py-2">400</td>
+                                    <td class="border border-gray-300 px-4 py-2">Bad Request - Invalid input data</td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-gray-300 px-4 py-2">500</td>
+                                    <td class="border border-gray-300 px-4 py-2">Internal Server Error - Server-side error</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Testing Section -->
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Testing the API</h2>
+                    <p class="text-gray-600 mb-4">You can test the API using curl, Postman, or any HTTP client. Here are some examples:</p>
+                    
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Test Sequence</h3>
+                    <div class="bg-code-bg border border-code-border rounded-lg p-4 mb-4">
+                        <pre class="text-sm text-gray-800"><code># 1. Check current status
+curl -X GET http://localhost:5000/api/traffic-light/status
+
+# 2. Set traffic light to green
+curl -X POST http://localhost:5000/api/traffic-light/status \
+  -H "Content-Type: application/json" \
+  -d '{"color": "green"}'
+
+# 3. Verify the change
+curl -X GET http://localhost:5000/api/traffic-light/status
+
+# 4. Try setting an invalid color (should return error)
+curl -X POST http://localhost:5000/api/traffic-light/status \
+  -H "Content-Type: application/json" \
+  -d '{"color": "blue"}'</code></pre>
+                    </div>
+                    
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Interactive Testing</h3>
+                    <p class="text-gray-600 mb-4">Use the main application interface at <a href="/" class="text-blue-500 hover:text-blue-700">http://localhost:5000</a> to test the API interactively with buttons and real-time updates.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

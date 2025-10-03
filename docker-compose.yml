@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  traffic-light:
+    build: .
+    container_name: traffic-light-app
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/traffic-light/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traffic-light.rule=Host(`localhost`)"
+      - "traefik.http.services.traffic-light.loadbalancer.server.port=5000" 

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Light Control</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'traffic-red': '#ef4444',
+                        'traffic-yellow': '#eab308',
+                        'traffic-green': '#22c55e'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-8">Traffic Light Control</h1>
+        
+        <!-- Traffic Light Display -->
+        <div class="flex justify-center mb-8">
+            <div class="bg-black rounded-lg p-6 shadow-lg">
+                <div class="space-y-4">
+                    <!-- Red Light -->
+                    <div class="w-24 h-24 rounded-full border-4 border-gray-700 mx-auto transition-all duration-300 ease-in-out
+                                {{ 'bg-traffic-red shadow-red-500 shadow-2xl' if current_color == 'red' else 'bg-gray-600' }}">
+                    </div>
+                    
+                    <!-- Yellow Light -->
+                    <div class="w-24 h-24 rounded-full border-4 border-gray-700 mx-auto transition-all duration-300 ease-in-out
+                                {{ 'bg-traffic-yellow shadow-yellow-500 shadow-2xl' if current_color == 'yellow' else 'bg-gray-600' }}">
+                    </div>
+                    
+                    <!-- Green Light -->
+                    <div class="w-24 h-24 rounded-full border-4 border-gray-700 mx-auto transition-all duration-300 ease-in-out
+                                {{ 'bg-traffic-green shadow-green-500 shadow-2xl' if current_color == 'green' else 'bg-gray-600' }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Current Status -->
+        <div class="text-center mb-8">
+            <p class="text-lg text-gray-600 mb-2">Current Status:</p>
+            <div class="inline-block px-4 py-2 rounded-full text-white font-semibold
+                        {{ 'bg-red-500' if current_color == 'red' else 'bg-yellow-500' if current_color == 'yellow' else 'bg-green-500' }}">
+                {{ current_color.upper() }}
+            </div>
+        </div>
+        
+        <!-- Control Buttons -->
+        <div class="flex justify-center space-x-4 mb-8">
+            <button onclick="setTrafficLight('red')" 
+                    class="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200 font-semibold">
+                Set Red
+            </button>
+            <button onclick="setTrafficLight('yellow')" 
+                    class="px-6 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-200 font-semibold">
+                Set Yellow
+            </button>
+            <button onclick="setTrafficLight('green')" 
+                    class="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 font-semibold">
+                Set Green
+            </button>
+        </div>
+        
+        <!-- Status Messages -->
+        <div id="statusMessage" class="hidden text-center p-4 rounded-lg mb-4"></div>
+        
+        <!-- API Information -->
+        <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">API Information</h2>
+            <div class="space-y-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-700">Get Current Status</h3>
+                    <p class="text-gray-600">GET /api/traffic-light/status</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-700">Set Traffic Light Color</h3>
+                    <p class="text-gray-600">POST /api/traffic-light/status</p>
+                    <p class="text-sm text-gray-500">Body: {"color": "red|yellow|green"}</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-700">Get Valid Colors</h3>
+                    <p class="text-gray-600">GET /api/traffic-light/colors</p>
+                </div>
+            </div>
+            <div class="mt-6">
+                <a href="/docs" class="inline-block px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200">
+                    View Full API Documentation
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showMessage(message, type = 'success') {
+            const messageDiv = document.getElementById('statusMessage');
+            messageDiv.className = `text-center p-4 rounded-lg mb-4 ${
+                type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`;
+            messageDiv.textContent = message;
+            messageDiv.classList.remove('hidden');
+            
+            setTimeout(() => {
+                messageDiv.classList.add('hidden');
+            }, 3000);
+        }
+        
+        async function setTrafficLight(color) {
+            try {
+                const response = await fetch('/api/traffic-light/status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ color: color })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                    // Reload page to update traffic light display
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Error setting traffic light: ' + error.message, 'error');
+            }
+        }
+        
+        // Auto-refresh status every 5 seconds
+        setInterval(() => {
+            fetch('/api/traffic-light/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const currentColor = '{{ current_color }}';
+                        if (data.color !== currentColor) {
+                            window.location.reload();
+                        }
+                    }
+                })
+                .catch(error => console.error('Error fetching status:', error));
+        }, 5000);
+    </script>
+</body>
+</html> 
