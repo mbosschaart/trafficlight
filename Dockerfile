@@ -1,5 +1,7 @@
-# Use Python 3.11 slim image as base
-FROM python:3.11-slim
+
+# Use Python 3.11 slim image based on Debian Trixie for security patches
+FROM python:3.11-slim-trixie
+
 
 # Set working directory in container
 WORKDIR /app
@@ -11,7 +13,9 @@ ENV FLASK_APP=app.py
 ENV FLASK_ENV=production
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
+
     curl \
     && rm -rf /var/lib/apt/lists/*
 
