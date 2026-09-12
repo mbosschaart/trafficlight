@@ -6,7 +6,7 @@ set -e
 
 CONTAINER_NAME="traffic-light-container"
 IMAGE_NAME="traffic-light-app"
-PORT="5000"
+PORT="5005"
 
 # Function to print colored messages
 print_info() {
@@ -48,7 +48,11 @@ start() {
     
     # Run the container
     print_info "Starting container..."
-    docker run -d -p "$PORT:$PORT" --name "$CONTAINER_NAME" "$IMAGE_NAME"
+    DOCKER_RUN_ARGS=(-d -p "$PORT:8065" --name "$CONTAINER_NAME")
+    if [ -f .env ]; then
+        DOCKER_RUN_ARGS+=(--env-file .env)
+    fi
+    docker run "${DOCKER_RUN_ARGS[@]}" "$IMAGE_NAME"
     
     # Wait for container to be ready
     sleep 3

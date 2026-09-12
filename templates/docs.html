@@ -35,14 +35,30 @@
                 <div class="mb-8">
                     <h2 class="text-2xl font-bold text-gray-800 mb-4">Base URL</h2>
                     <div class="bg-code-bg border border-code-border rounded-lg p-4">
-                        <code class="text-sm text-gray-800">http://localhost:5000</code>
+                        <code class="text-sm text-gray-800">http://localhost:5005</code>
                     </div>
                 </div>
                 
                 <!-- Authentication -->
                 <div class="mb-8">
                     <h2 class="text-2xl font-bold text-gray-800 mb-4">Authentication</h2>
-                    <p class="text-gray-600">No authentication required for this API.</p>
+                    <p class="text-gray-600 mb-4">All <code class="text-sm">/api/traffic-light/*</code> and <code class="text-sm">/api/registry/*</code> endpoints require a Bearer token when an API key is configured. Settings and debug endpoints used by the UI do not.</p>
+                    <div class="bg-code-bg border border-code-border rounded-lg p-4 mb-4">
+                        <pre class="text-sm text-gray-800"><code>Authorization: Bearer {{ api_key or 'your-api-key' }}</code></pre>
+                    </div>
+                    <p class="text-gray-600 mb-2">Current API key: <code class="text-sm font-semibold">{{ api_key if api_key else '(empty — auth disabled)' }}</code></p>
+                    <p class="text-sm text-gray-500">Change the key from the main page, or set the <code class="text-sm">API_KEY</code> environment variable on startup. Default key is <code class="text-sm">secretapikey</code>.</p>
+                </div>
+
+                <!-- Overview -->
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">API surface</h2>
+                    <ul class="list-disc list-inside text-gray-600 space-y-1">
+                        <li><strong>Control</strong> — <code class="text-sm">/api/traffic-light/*</code> (status, colors, location ID)</li>
+                        <li><strong>Registry</strong> — <code class="text-sm">/api/registry/traffic-lights</code> (CRUD over 1000 Dutch inventory records)</li>
+                        <li><strong>Settings</strong> — API key, serial number, reset, force agent check</li>
+                        <li><strong>Debug</strong> — live request log for the UI traffic monitor</li>
+                    </ul>
                 </div>
                 
                 <!-- Endpoints -->
@@ -79,7 +95,7 @@
                                     <tr>
                                         <td class="border border-gray-300 px-4 py-2">color</td>
                                         <td class="border border-gray-300 px-4 py-2">string</td>
-                                        <td class="border border-gray-300 px-4 py-2">Current traffic light color (red, yellow, or green)</td>
+                                        <td class="border border-gray-300 px-4 py-2">Current color: red, amber, green, or failure (both recoverable and persistent failure report as "failure")</td>
                                     </tr>
                                     <tr>
                                         <td class="border border-gray-300 px-4 py-2">timestamp</td>
@@ -97,7 +113,8 @@
                         
                         <h3 class="text-lg font-semibold text-gray-700 mb-2 mt-4">Example Request</h3>
                         <div class="bg-code-bg border border-code-border rounded-lg p-4">
-                            <pre class="text-sm text-gray-800"><code>curl -X GET http://localhost:5000/api/traffic-light/status</code></pre>
+                            <pre class="text-sm text-gray-800"><code>curl -X GET http://localhost:5005/api/traffic-light/status \
+  -H "Authorization: Bearer {{ api_key or 'your-api-key' }}"</code></pre>
                         </div>
                     </div>
                     
@@ -133,7 +150,7 @@
                                         <td class="border border-gray-300 px-4 py-2">color</td>
                                         <td class="border border-gray-300 px-4 py-2">string</td>
                                         <td class="border border-gray-300 px-4 py-2">Yes</td>
-                                        <td class="border border-gray-300 px-4 py-2">Traffic light color: "red", "yellow", or "green"</td>
+                                        <td class="border border-gray-300 px-4 py-2">"red", "amber", "green", "failure" (recoverable), or "persistent_failure" (sets color to failure and permanently blocks further changes). Status always returns "failure" for both failure modes.</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -153,15 +170,28 @@
                         <div class="bg-code-bg border border-code-border rounded-lg p-4 mb-4">
                             <pre class="text-sm text-gray-800"><code>{
   "success": false,
-  "error": "Invalid color. Must be one of: red, yellow, green"
+  "error": "Invalid color. Must be one of: red, amber, green, failure, persistent_failure (or 'reset' to clear persistent failure)"
 }</code></pre>
                         </div>
                         
                         <h3 class="text-lg font-semibold text-gray-700 mb-2">Example Request</h3>
                         <div class="bg-code-bg border border-code-border rounded-lg p-4">
-                            <pre class="text-sm text-gray-800"><code>curl -X POST http://localhost:5000/api/traffic-light/status \
+                            <pre class="text-sm text-gray-800"><code>curl -X POST http://localhost:5005/api/traffic-light/status \
+  -H "Authorization: Bearer {{ api_key or 'your-api-key' }}" \
   -H "Content-Type: application/json" \
-  -d '{"color": "green"}'</code></pre>
+  -d '{"color": "green"}'
+
+# Failure mode (blinking amber)
+curl -X POST http://localhost:5005/api/traffic-light/status \
+  -H "Authorization: Bearer {{ api_key or 'your-api-key' }}" \
+  -H "Content-Type: application/json" \
+  -d '{"color": "failure"}'
+
+# Persistent failure (blocks color changes until reset)
+curl -X POST http://localhost:5005/api/traffic-light/status \
+  -H "Authorization: Bearer {{ api_key or 'your-api-key' }}" \
+  -H "Content-Type: application/json" \
+  -d '{"color": "persistent_failure"}'</code></pre>
                         </div>
                     </div>
                     
@@ -172,20 +202,166 @@
                             <span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold mr-2">GET</span>
                             <code class="text-lg text-gray-700">/api/traffic-light/colors</code>
                         </div>
-                        <p class="text-gray-600 mb-4">Get a list of all valid traffic light colors.</p>
+                        <p class="text-gray-600 mb-4">Get the normal settable traffic light colors (failure modes are not included).</p>
                         
                         <h3 class="text-lg font-semibold text-gray-700 mb-2">Response</h3>
                         <div class="bg-code-bg border border-code-border rounded-lg p-4 mb-4">
                             <pre class="text-sm text-gray-800"><code>{
-  "colors": ["red", "yellow", "green"],
+  "colors": ["red", "amber", "green"],
   "success": true
 }</code></pre>
                         </div>
                         
                         <h3 class="text-lg font-semibold text-gray-700 mb-2">Example Request</h3>
                         <div class="bg-code-bg border border-code-border rounded-lg p-4">
-                            <pre class="text-sm text-gray-800"><code>curl -X GET http://localhost:5000/api/traffic-light/colors</code></pre>
+                            <pre class="text-sm text-gray-800"><code>curl -X GET http://localhost:5005/api/traffic-light/colors \
+  -H "Authorization: Bearer {{ api_key or 'your-api-key' }}"</code></pre>
                         </div>
+                    </div>
+
+                    <!-- Location ID Endpoint -->
+                    <div class="border-b border-gray-200 pb-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Get Location ID</h2>
+                        <div class="mb-4">
+                            <span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold mr-2">GET</span>
+                            <code class="text-lg text-gray-700">/api/traffic-light/location-id</code>
+                        </div>
+                        <p class="text-gray-600 mb-4">Get the traffic light location ID (10-digit serial number). Change it from the main page UI.</p>
+
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">Response</h3>
+                        <div class="bg-code-bg border border-code-border rounded-lg p-4 mb-4">
+                            <pre class="text-sm text-gray-800"><code>{
+  "location_id": "4829173056",
+  "serial_number": "4829173056",
+  "success": true
+}</code></pre>
+                        </div>
+
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">Example Request</h3>
+                        <div class="bg-code-bg border border-code-border rounded-lg p-4">
+                            <pre class="text-sm text-gray-800"><code>curl -X GET http://localhost:5005/api/traffic-light/location-id \
+  -H "Authorization: Bearer {{ api_key or 'your-api-key' }}"</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Registry CRUD -->
+                    <div class="border-b border-gray-200 pb-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Traffic Light Registry (CRUD)</h2>
+                        <p class="text-gray-600 mb-4">
+                            SQLite inventory of 1000 traffic lights across Dutch cities. The default serial
+                            <code class="text-sm">4829173056</code> is located in Utrecht. Bearer auth required when an API key is set.
+                        </p>
+
+                        <div class="mb-4">
+                            <span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold mr-2">GET</span>
+                            <code class="text-lg text-gray-700">/api/registry/traffic-lights</code>
+                        </div>
+                        <p class="text-gray-600 mb-2">List lights. Query params: <code class="text-sm">limit</code>, <code class="text-sm">offset</code>, <code class="text-sm">city</code>, <code class="text-sm">q</code>, or <code class="text-sm">all=true</code> for the full database in one response.</p>
+                        <div class="bg-code-bg border border-code-border rounded-lg p-4 mb-4">
+                            <pre class="text-sm text-gray-800"><code>curl -X GET "http://localhost:5005/api/registry/traffic-lights?city=Utrecht&amp;limit=5" \
+  -H "Authorization: Bearer {{ api_key or 'your-api-key' }}"
+
+# Entire database (all 1000 records)
+curl -X GET "http://localhost:5005/api/registry/traffic-lights?all=true" \
+  -H "Authorization: Bearer {{ api_key or 'your-api-key' }}"</code></pre>
+                        </div>
+
+                        <div class="mb-4">
+                            <span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold mr-2">GET</span>
+                            <code class="text-lg text-gray-700">/api/registry/traffic-lights/&lt;serial_number&gt;</code>
+                        </div>
+                        <div class="bg-code-bg border border-code-border rounded-lg p-4 mb-4">
+                            <pre class="text-sm text-gray-800"><code>curl -X GET http://localhost:5005/api/registry/traffic-lights/4829173056 \
+  -H "Authorization: Bearer {{ api_key or 'your-api-key' }}"</code></pre>
+                        </div>
+
+                        <div class="mb-4">
+                            <span class="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold mr-2">POST</span>
+                            <code class="text-lg text-gray-700">/api/registry/traffic-lights</code>
+                        </div>
+                        <div class="bg-code-bg border border-code-border rounded-lg p-4 mb-4">
+                            <pre class="text-sm text-gray-800"><code>curl -X POST http://localhost:5005/api/registry/traffic-lights \
+  -H "Authorization: Bearer {{ api_key or 'your-api-key' }}" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "serial_number": "9999999999",
+  "city": "Utrecht",
+  "address": "Domplein 1, 3512 JC Utrecht",
+  "latitude": 52.0907,
+  "longitude": 5.1214,
+  "operational_since": "2018-03-12"
+}'</code></pre>
+                        </div>
+
+                        <div class="mb-4">
+                            <span class="inline-block px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-semibold mr-2">PUT</span>
+                            <code class="text-lg text-gray-700">/api/registry/traffic-lights/&lt;serial_number&gt;</code>
+                        </div>
+                        <p class="text-gray-600 mb-2">Partial updates allowed.</p>
+                        <div class="bg-code-bg border border-code-border rounded-lg p-4 mb-4">
+                            <pre class="text-sm text-gray-800"><code>curl -X PUT http://localhost:5005/api/registry/traffic-lights/9999999999 \
+  -H "Authorization: Bearer {{ api_key or 'your-api-key' }}" \
+  -H "Content-Type: application/json" \
+  -d '{"address": "Domplein 2, 3512 JC Utrecht"}'</code></pre>
+                        </div>
+
+                        <div class="mb-4">
+                            <span class="inline-block px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-semibold mr-2">DELETE</span>
+                            <code class="text-lg text-gray-700">/api/registry/traffic-lights/&lt;serial_number&gt;</code>
+                        </div>
+                        <div class="bg-code-bg border border-code-border rounded-lg p-4">
+                            <pre class="text-sm text-gray-800"><code>curl -X DELETE http://localhost:5005/api/registry/traffic-lights/9999999999 \
+  -H "Authorization: Bearer {{ api_key or 'your-api-key' }}"</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Settings -->
+                    <div class="border-b border-gray-200 pb-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Settings &amp; Agent</h2>
+                        <p class="text-gray-600 mb-4">Used by the web UI. Bearer auth is not required for these routes.</p>
+
+                        <div class="mb-4">
+                            <span class="inline-block px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-semibold mr-2">PUT</span>
+                            <code class="text-lg text-gray-700">/api/settings/api-key</code>
+                        </div>
+                        <div class="bg-code-bg border border-code-border rounded-lg p-4 mb-4">
+                            <pre class="text-sm text-gray-800"><code>curl -X PUT http://localhost:5005/api/settings/api-key \
+  -H "Content-Type: application/json" \
+  -d '{"api_key": "secretapikey"}'</code></pre>
+                        </div>
+
+                        <div class="mb-4">
+                            <span class="inline-block px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-semibold mr-2">PUT</span>
+                            <code class="text-lg text-gray-700">/api/settings/serial-number</code>
+                        </div>
+                        <p class="text-gray-600 mb-2">Body: <code class="text-sm">{"serial_number":"4829173056"}</code> (exactly 10 digits). Returned by <code class="text-sm">GET /api/traffic-light/location-id</code>.</p>
+                        <div class="bg-code-bg border border-code-border rounded-lg p-4 mb-4">
+                            <pre class="text-sm text-gray-800"><code>curl -X PUT http://localhost:5005/api/settings/serial-number \
+  -H "Content-Type: application/json" \
+  -d '{"serial_number": "4829173056"}'</code></pre>
+                        </div>
+
+                        <div class="mb-4">
+                            <span class="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold mr-2">POST</span>
+                            <code class="text-lg text-gray-700">/api/settings/force-agent-check</code>
+                        </div>
+                        <p class="text-gray-600 mb-2">Sends <code class="text-sm">"Inspect the light"</code> to the local OpenAI-compatible agent (<code class="text-sm">AGENT_BASE_URL</code>, default host port 5050). Returns the agent reply in <code class="text-sm">message</code>.</p>
+                        <div class="bg-code-bg border border-code-border rounded-lg p-4 mb-4">
+                            <pre class="text-sm text-gray-800"><code>curl -X POST http://localhost:5005/api/settings/force-agent-check</code></pre>
+                        </div>
+
+                        <div class="mb-4">
+                            <span class="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold mr-2">POST</span>
+                            <code class="text-lg text-gray-700">/api/settings/reset</code>
+                        </div>
+                        <p class="text-gray-600 mb-2">Resets light to red, clears the request log, restores default API key and serial number.</p>
+
+                        <div class="mb-4">
+                            <span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold mr-2">GET</span>
+                            <span class="inline-block px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-semibold mr-2">DELETE</span>
+                            <code class="text-lg text-gray-700">/api/debug/requests</code>
+                        </div>
+                        <p class="text-gray-600">Live API traffic monitor ring buffer (max 100 entries). Optional query: <code class="text-sm">?since=&lt;seq&gt;</code>.</p>
                     </div>
                 </div>
                 
@@ -210,6 +386,10 @@
                                     <td class="border border-gray-300 px-4 py-2">Bad Request - Invalid input data</td>
                                 </tr>
                                 <tr>
+                                    <td class="border border-gray-300 px-4 py-2">401</td>
+                                    <td class="border border-gray-300 px-4 py-2">Unauthorized - Missing or invalid Bearer API key</td>
+                                </tr>
+                                <tr>
                                     <td class="border border-gray-300 px-4 py-2">500</td>
                                     <td class="border border-gray-300 px-4 py-2">Internal Server Error - Server-side error</td>
                                 </tr>
@@ -226,24 +406,36 @@
                     <h3 class="text-lg font-semibold text-gray-700 mb-2">Test Sequence</h3>
                     <div class="bg-code-bg border border-code-border rounded-lg p-4 mb-4">
                         <pre class="text-sm text-gray-800"><code># 1. Check current status
-curl -X GET http://localhost:5000/api/traffic-light/status
+curl -X GET http://localhost:5005/api/traffic-light/status \
+  -H "Authorization: Bearer {{ api_key or 'your-api-key' }}"
 
 # 2. Set traffic light to green
-curl -X POST http://localhost:5000/api/traffic-light/status \
+curl -X POST http://localhost:5005/api/traffic-light/status \
+  -H "Authorization: Bearer {{ api_key or 'your-api-key' }}" \
   -H "Content-Type: application/json" \
   -d '{"color": "green"}'
 
 # 3. Verify the change
-curl -X GET http://localhost:5000/api/traffic-light/status
+curl -X GET http://localhost:5005/api/traffic-light/status \
+  -H "Authorization: Bearer {{ api_key or 'your-api-key' }}"
 
-# 4. Try setting an invalid color (should return error)
-curl -X POST http://localhost:5000/api/traffic-light/status \
+# 4. Look up default inventory serial (Utrecht)
+curl -X GET http://localhost:5005/api/registry/traffic-lights/4829173056 \
+  -H "Authorization: Bearer {{ api_key or 'your-api-key' }}"
+
+# 5. Export entire registry
+curl -X GET "http://localhost:5005/api/registry/traffic-lights?all=true" \
+  -H "Authorization: Bearer {{ api_key or 'your-api-key' }}"
+
+# 6. Try setting an invalid color (should return error)
+curl -X POST http://localhost:5005/api/traffic-light/status \
+  -H "Authorization: Bearer {{ api_key or 'your-api-key' }}" \
   -H "Content-Type: application/json" \
   -d '{"color": "blue"}'</code></pre>
                     </div>
                     
                     <h3 class="text-lg font-semibold text-gray-700 mb-2">Interactive Testing</h3>
-                    <p class="text-gray-600 mb-4">Use the main application interface at <a href="/" class="text-blue-500 hover:text-blue-700">http://localhost:5000</a> to test the API interactively with buttons and real-time updates.</p>
+                    <p class="text-gray-600 mb-4">Use the main application interface at <a href="/" class="text-blue-500 hover:text-blue-700">http://localhost:5005</a> to test the API interactively with buttons and real-time updates.</p>
                 </div>
             </div>
         </div>

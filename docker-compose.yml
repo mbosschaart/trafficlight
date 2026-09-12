@@ -5,13 +5,26 @@ services:
     build: .
     container_name: traffic-light-app
     ports:
-      - "5000:5000"
+      - "5005:8065"
+    env_file:
+      - .env
     environment:
       - FLASK_ENV=production
       - PYTHONUNBUFFERED=1
+      - PORT=8065
+      # Reach agent gateway running on the host (macOS/Windows Docker Desktop)
+      - AGENT_BASE_URL=http://host.docker.internal:5050/v1
+      - AGENT_API_KEY=agent-local-key
+      - AGENT_ID=default
+      - AGENT_MODEL=default
+      - TRAFFIC_LIGHTS_DB=/app/var/traffic_lights.db
+    volumes:
+      - traffic-lights-db:/app/var
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/api/traffic-light/status"]
+      test: ["CMD", "curl", "-f", "http://localhost:8065/api/traffic-light/status"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -19,4 +32,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.traffic-light.rule=Host(`localhost`)"
-      - "traefik.http.services.traffic-light.loadbalancer.server.port=5000" 
+      - "traefik.http.services.traffic-light.loadbalancer.server.port=8065"
+
+volumes:
+  traffic-lights-db:

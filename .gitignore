@@ -60,6 +60,10 @@ cover/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+*.db
+data/traffic_lights.db
+data/traffic_lights.db-*
+var/
 
 # Flask stuff:
 instance/
@@ -135,7 +139,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+# .env is intentionally tracked for this internal demo (agent settings)
 .envrc
 .venv
 env/
@@ -205,3 +209,5 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+.DS_Store
+.cursor

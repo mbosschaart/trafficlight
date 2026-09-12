@@ -18,88 +18,287 @@
             }
         }
     </script>
+    <style>
+        @keyframes amber-blink {
+            0%, 49% {
+                background-color: #eab308;
+                box-shadow: 0 0 40px rgba(234, 179, 8, 0.9);
+                opacity: 1;
+            }
+            50%, 100% {
+                background-color: #4b5563;
+                box-shadow: none;
+                opacity: 1;
+            }
+        }
+        .amber-blink {
+            animation: amber-blink 1s steps(1, end) infinite;
+        }
+        @keyframes flash-in {
+            from { background-color: rgb(254 249 195); }
+            to { background-color: transparent; }
+        }
+        .flash-new { animation: flash-in 1.2s ease-out; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
         <h1 class="text-4xl font-bold text-center text-gray-800 mb-8">Traffic Light Control</h1>
-        
-        <!-- Traffic Light Display -->
-        <div class="flex justify-center mb-8">
-            <div class="bg-black rounded-lg p-6 shadow-lg">
-                <div class="space-y-4">
-                    <!-- Red Light -->
-                    <div class="w-24 h-24 rounded-full border-4 border-gray-700 mx-auto transition-all duration-300 ease-in-out
-                                {{ 'bg-traffic-red shadow-red-500 shadow-2xl' if current_color == 'red' else 'bg-gray-600' }}">
-                    </div>
-                    
-                    <!-- Yellow Light -->
-                    <div class="w-24 h-24 rounded-full border-4 border-gray-700 mx-auto transition-all duration-300 ease-in-out
-                                {{ 'bg-traffic-yellow shadow-yellow-500 shadow-2xl' if current_color == 'yellow' else 'bg-gray-600' }}">
-                    </div>
-                    
-                    <!-- Green Light -->
-                    <div class="w-24 h-24 rounded-full border-4 border-gray-700 mx-auto transition-all duration-300 ease-in-out
-                                {{ 'bg-traffic-green shadow-green-500 shadow-2xl' if current_color == 'green' else 'bg-gray-600' }}">
+
+        <div class="grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-8 items-start mb-6">
+            <!-- Left: traffic light -->
+            <div class="flex flex-col items-center lg:sticky lg:top-8">
+                <div class="bg-black rounded-lg p-6 shadow-lg mb-6">
+                    <div class="space-y-4">
+                        <div id="light-red" class="w-24 h-24 rounded-full border-4 border-gray-700 mx-auto transition-all duration-300 ease-in-out bg-gray-600"></div>
+                        <div id="light-yellow" class="w-24 h-24 rounded-full border-4 border-gray-700 mx-auto transition-all duration-300 ease-in-out bg-gray-600"></div>
+                        <div id="light-green" class="w-24 h-24 rounded-full border-4 border-gray-700 mx-auto transition-all duration-300 ease-in-out bg-gray-600"></div>
                     </div>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Current Status -->
-        <div class="text-center mb-8">
-            <p class="text-lg text-gray-600 mb-2">Current Status:</p>
-            <div class="inline-block px-4 py-2 rounded-full text-white font-semibold
-                        {{ 'bg-red-500' if current_color == 'red' else 'bg-yellow-500' if current_color == 'yellow' else 'bg-green-500' }}">
-                {{ current_color.upper() }}
-            </div>
-        </div>
-        
-        <!-- Control Buttons -->
-        <div class="flex justify-center space-x-4 mb-8">
-            <button onclick="setTrafficLight('red')" 
-                    class="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200 font-semibold">
-                Set Red
-            </button>
-            <button onclick="setTrafficLight('yellow')" 
-                    class="px-6 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-200 font-semibold">
-                Set Yellow
-            </button>
-            <button onclick="setTrafficLight('green')" 
-                    class="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 font-semibold">
-                Set Green
-            </button>
-        </div>
-        
-        <!-- Status Messages -->
-        <div id="statusMessage" class="hidden text-center p-4 rounded-lg mb-4"></div>
-        
-        <!-- API Information -->
-        <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">API Information</h2>
-            <div class="space-y-4">
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-700">Get Current Status</h3>
-                    <p class="text-gray-600">GET /api/traffic-light/status</p>
-                </div>
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-700">Set Traffic Light Color</h3>
-                    <p class="text-gray-600">POST /api/traffic-light/status</p>
-                    <p class="text-sm text-gray-500">Body: {"color": "red|yellow|green"}</p>
-                </div>
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-700">Get Valid Colors</h3>
-                    <p class="text-gray-600">GET /api/traffic-light/colors</p>
+
+                <div class="text-center">
+                    <p class="text-lg text-gray-600 mb-2">Current Status:</p>
+                    <div id="statusBadge" class="inline-block px-4 py-2 rounded-full text-white font-semibold bg-red-500">RED</div>
                 </div>
             </div>
-            <div class="mt-6">
-                <a href="/docs" class="inline-block px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200">
-                    View Full API Documentation
-                </a>
+
+            <!-- Right: live API traffic monitor -->
+            <div class="bg-white rounded-lg shadow-lg p-6 min-w-0">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">Live API Traffic</h2>
+                        <p class="text-sm text-gray-500 mt-1">External <code class="mono">/api/*</code> requests appear here in real time (localhost traffic is hidden).</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span id="liveBadge" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                            Live
+                        </span>
+                        <button id="clearBtn" type="button" class="px-3 py-1.5 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-semibold">Clear</button>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3 mb-3">
+                    <label class="text-sm text-gray-600 flex items-center gap-2">
+                        Method
+                        <select id="filterMethod" class="border border-gray-300 rounded-md px-2 py-1 text-sm">
+                            <option value="">All</option>
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="PUT">PUT</option>
+                            <option value="DELETE">DELETE</option>
+                            <option value="PATCH">PATCH</option>
+                        </select>
+                    </label>
+                    <label class="text-sm text-gray-600 flex items-center gap-2 flex-1 min-w-[10rem]">
+                        Path contains
+                        <input id="filterPath" type="text" placeholder="/api/traffic-light" class="border border-gray-300 rounded-md px-2 py-1 text-sm flex-1 mono">
+                    </label>
+                    <label class="text-sm text-gray-600 flex items-center gap-2">
+                        <input id="pauseToggle" type="checkbox" class="rounded">
+                        Pause
+                    </label>
+                </div>
+
+                <div class="flex items-center justify-between text-sm text-gray-500 mb-2">
+                    <span><span id="requestCount">0</span> request(s) · newest first</span>
+                    <span id="lastPoll" class="mono"></span>
+                </div>
+
+                <div id="emptyState" class="border border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500">
+                    <p class="font-medium text-gray-700 mb-1">Waiting for external API traffic…</p>
+                    <p class="text-sm">Localhost requests are hidden. Call the API from an external client.</p>
+                </div>
+
+                <div id="requestList" class="space-y-2 max-h-[32rem] overflow-y-auto hidden"></div>
+            </div>
+        </div>
+
+        <!-- All controls under light + traffic -->
+        <div class="flex flex-wrap items-center justify-center gap-3 mb-3" id="colorButtons">
+            <button type="button" data-color="red" onclick="setTrafficLight('red')" class="color-btn px-5 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200 font-semibold disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-red-500">Set Red</button>
+            <button type="button" data-color="amber" onclick="setTrafficLight('amber')" class="color-btn px-5 py-2.5 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-200 font-semibold disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-yellow-500">Set Amber</button>
+            <button type="button" data-color="green" onclick="setTrafficLight('green')" class="color-btn px-5 py-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 font-semibold disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-green-500">Set Green</button>
+            <button id="failureBtn" onclick="setTrafficLight('failure')"
+                    class="px-5 py-2.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors duration-200 font-semibold border-2 border-amber-300 shadow-md">
+                Recoverable Failure
+            </button>
+            <button id="persistentFailureBtn" onclick="setTrafficLight('persistent_failure')"
+                    class="px-5 py-2.5 bg-orange-700 text-white rounded-lg hover:bg-orange-800 transition-colors duration-200 font-semibold border-2 border-orange-300 shadow-md">
+                Persistent Failure
+            </button>
+            <button type="button" id="forceAgentCheckBtn"
+                    class="px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-semibold">
+                Force Agent Check
+            </button>
+            <button type="button" id="resetStateBtn"
+                    class="px-5 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors duration-200 font-semibold">
+                Reset State
+            </button>
+            <a href="/docs" class="inline-block px-5 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 font-semibold">API Docs</a>
+        </div>
+
+        <div id="statusMessage" class="hidden text-center p-3 rounded-lg text-sm max-w-2xl mx-auto mb-6"></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- API key settings -->
+            <div class="bg-white rounded-lg shadow-lg p-4 text-left">
+                <h3 class="text-sm font-bold text-gray-800 mb-1">API Key (Bearer)</h3>
+                <p class="text-xs text-gray-500 mb-3">Required for <code class="mono">/api/traffic-light/*</code>. Leave empty to disable auth.</p>
+                <label class="block mb-2">
+                    <span class="sr-only">API key</span>
+                    <input id="apiKeyInput" type="text" autocomplete="off"
+                           class="w-full mono text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           placeholder="API key">
+                </label>
+                <div class="flex gap-2">
+                    <button type="button" id="saveApiKeyBtn"
+                            class="flex-1 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-semibold">
+                        Save key
+                    </button>
+                    <button type="button" id="clearApiKeyBtn"
+                            class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-semibold">
+                        Clear
+                    </button>
+                </div>
+                <p id="apiKeyStatus" class="text-xs text-gray-500 mt-2"></p>
+            </div>
+
+            <!-- Serial / location ID settings -->
+            <div class="bg-white rounded-lg shadow-lg p-4 text-left">
+                <h3 class="text-sm font-bold text-gray-800 mb-1">Location ID (Serial Number)</h3>
+                <p class="text-xs text-gray-500 mb-3">Returned by <code class="mono">GET /api/traffic-light/location-id</code>. Must be exactly 10 digits. Default: <code class="mono">{{ default_serial_number }}</code></p>
+                <label class="block mb-2">
+                    <span class="sr-only">Serial number</span>
+                    <input id="serialNumberInput" type="text" inputmode="numeric" maxlength="10" autocomplete="off"
+                           class="w-full mono text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 tracking-widest"
+                           value="{{ serial_number }}"
+                           placeholder="{{ default_serial_number }}">
+                </label>
+                <div class="flex gap-2">
+                    <button type="button" id="saveSerialBtn"
+                            class="flex-1 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-semibold">
+                        Save serial
+                    </button>
+                    <button type="button" id="resetSerialBtn"
+                            class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-semibold">
+                        Default
+                    </button>
+                </div>
+                <p id="serialStatus" class="text-xs text-gray-500 mt-2"></p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-3">API Information</h2>
+                <div class="space-y-3 text-sm">
+                    <div>
+                        <h3 class="font-semibold text-gray-700">Authentication</h3>
+                        <p class="text-gray-600">Bearer token on <code class="mono">/api/traffic-light/*</code></p>
+                        <p class="text-gray-500 mono">Authorization: Bearer &lt;api_key&gt;</p>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-700">Get Status</h3>
+                        <p class="text-gray-600">GET /api/traffic-light/status</p>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-700">Set Color</h3>
+                        <p class="text-gray-600">POST /api/traffic-light/status</p>
+                        <p class="text-gray-500">Body: {"color": "red|amber|green|failure|persistent_failure"}</p>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-700">Valid Colors</h3>
+                        <p class="text-gray-600">GET /api/traffic-light/colors</p>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-700">Location ID</h3>
+                        <p class="text-gray-600">GET /api/traffic-light/location-id</p>
+                        <p class="text-gray-500">Returns the 10-digit serial number</p>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-700">Inventory registry (CRUD)</h3>
+                        <p class="text-gray-600">GET/POST /api/registry/traffic-lights</p>
+                        <p class="text-gray-600">GET/PUT/DELETE /api/registry/traffic-lights/&lt;serial&gt;</p>
+                        <p class="text-gray-500">1000 seeded Dutch locations (default serial = Utrecht)</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    
+
     <script>
+        const INITIAL_COLOR = {{ current_color | tojson }};
+        const INITIAL_PERSISTENT = {{ persistent | tojson }};
+        const INITIAL_API_KEY = {{ api_key | tojson }};
+        const INITIAL_SERIAL_NUMBER = {{ serial_number | tojson }};
+        const DEFAULT_SERIAL_NUMBER = {{ default_serial_number | tojson }};
+        const POLL_MS = 800;
+        const STATUS_MS = 2000;
+
+        const lightOn = {
+            red: 'bg-traffic-red shadow-red-500 shadow-2xl',
+            amber: 'bg-traffic-yellow shadow-yellow-500 shadow-2xl',
+            green: 'bg-traffic-green shadow-green-500 shadow-2xl',
+        };
+        const badgeBg = {
+            red: 'bg-red-500',
+            amber: 'bg-yellow-500',
+            green: 'bg-green-500',
+            failure: 'bg-amber-600',
+        };
+        const badgeLabel = {
+            red: 'RED',
+            amber: 'AMBER',
+            green: 'GREEN',
+            failure: 'FAILURE',
+        };
+        const methodColors = {
+            GET: 'bg-green-100 text-green-800',
+            POST: 'bg-blue-100 text-blue-800',
+            PUT: 'bg-amber-100 text-amber-800',
+            PATCH: 'bg-purple-100 text-purple-800',
+            DELETE: 'bg-red-100 text-red-800',
+        };
+
+        let currentColor = INITIAL_COLOR;
+        let isPersistent = Boolean(INITIAL_PERSISTENT);
+        let apiKey = INITIAL_API_KEY || '';
+        let serialNumber = INITIAL_SERIAL_NUMBER || DEFAULT_SERIAL_NUMBER;
+        let latestSeq = 0;
+        let allRequests = [];
+        let expandedIds = new Set();
+
+        function updateApiKeyStatus() {
+            const el = document.getElementById('apiKeyStatus');
+            if (apiKey) {
+                el.textContent = 'Auth enabled — clients must send Bearer token';
+                el.className = 'text-xs text-green-700 mt-2';
+            } else {
+                el.textContent = 'Auth disabled — API is open';
+                el.className = 'text-xs text-amber-700 mt-2';
+            }
+            document.getElementById('apiKeyInput').value = apiKey;
+        }
+
+        function updateSerialStatus() {
+            const el = document.getElementById('serialStatus');
+            el.textContent = `Active location ID: ${serialNumber}`;
+            el.className = 'text-xs text-green-700 mt-2';
+            document.getElementById('serialNumberInput').value = serialNumber;
+        }
+
+        function authHeaders(extra = {}) {
+            const headers = { ...extra };
+            if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+            return headers;
+        }
+
+        function uiHeaders(extra = {}) {
+            return authHeaders({ 'X-TrafficLight-UI': '1', ...extra });
+        }
+
         function showMessage(message, type = 'success') {
             const messageDiv = document.getElementById('statusMessage');
             messageDiv.className = `text-center p-4 rounded-lg mb-4 ${
@@ -107,52 +306,374 @@
             }`;
             messageDiv.textContent = message;
             messageDiv.classList.remove('hidden');
-            
-            setTimeout(() => {
-                messageDiv.classList.add('hidden');
-            }, 3000);
+            setTimeout(() => messageDiv.classList.add('hidden'), 3000);
         }
-        
+
+        function updateTrafficLight(color, persistent = false) {
+            currentColor = color;
+            isPersistent = Boolean(persistent) && color === 'failure';
+            const base = 'w-24 h-24 rounded-full border-4 border-gray-700 mx-auto transition-all duration-300 ease-in-out';
+            document.getElementById('light-red').className =
+                `${base} ${color === 'red' ? lightOn.red : 'bg-gray-600'}`;
+            document.getElementById('light-yellow').className =
+                `${base} ${color === 'failure' ? 'amber-blink' : color === 'amber' ? lightOn.amber : 'bg-gray-600'}`;
+            document.getElementById('light-green').className =
+                `${base} ${color === 'green' ? lightOn.green : 'bg-gray-600'}`;
+
+            const badge = document.getElementById('statusBadge');
+            const label = color === 'failure'
+                ? (isPersistent ? 'FAILURE (PERSISTENT)' : 'FAILURE (RECOVERABLE)')
+                : (badgeLabel[color] || color.toUpperCase());
+            badge.className = `inline-block px-4 py-2 rounded-full text-white font-semibold ${
+                isPersistent ? 'bg-orange-700' : (badgeBg[color] || 'bg-gray-500')
+            }`;
+            badge.textContent = label;
+
+            const failureBtn = document.getElementById('failureBtn');
+            const persistentBtn = document.getElementById('persistentFailureBtn');
+            const locked = isPersistent;
+
+            failureBtn.classList.toggle('ring-4', color === 'failure' && !isPersistent);
+            failureBtn.classList.toggle('ring-amber-300', color === 'failure' && !isPersistent);
+            failureBtn.disabled = locked;
+            failureBtn.classList.toggle('opacity-40', locked);
+            failureBtn.classList.toggle('cursor-not-allowed', locked);
+
+            persistentBtn.classList.toggle('ring-4', locked);
+            persistentBtn.classList.toggle('ring-orange-300', locked);
+
+            document.querySelectorAll('.color-btn').forEach((btn) => {
+                btn.disabled = locked;
+            });
+        }
+
         async function setTrafficLight(color) {
+            if (isPersistent && color !== 'persistent_failure') {
+                showMessage(
+                    'Traffic light is in persistent failure mode. Setting another color is not possible.',
+                    'error'
+                );
+                return;
+            }
             try {
                 const response = await fetch('/api/traffic-light/status', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ color: color })
+                    headers: uiHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ color }),
                 });
-                
                 const data = await response.json();
-                
                 if (data.success) {
                     showMessage(data.message, 'success');
-                    // Reload page to update traffic light display
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
+                    updateTrafficLight(data.color, data.persistent);
                 } else {
                     showMessage(data.error, 'error');
+                    if (data.color) updateTrafficLight(data.color, data.persistent);
                 }
             } catch (error) {
                 showMessage('Error setting traffic light: ' + error.message, 'error');
             }
         }
-        
-        // Auto-refresh status every 5 seconds
-        setInterval(() => {
-            fetch('/api/traffic-light/status')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const currentColor = '{{ current_color }}';
-                        if (data.color !== currentColor) {
-                            window.location.reload();
-                        }
-                    }
-                })
-                .catch(error => console.error('Error fetching status:', error));
-        }, 5000);
+
+        async function pollStatus() {
+            try {
+                const response = await fetch('/api/traffic-light/status', { headers: uiHeaders() });
+                const data = await response.json();
+                if (data.success && (data.color !== currentColor || Boolean(data.persistent) !== isPersistent)) {
+                    updateTrafficLight(data.color, data.persistent);
+                }
+            } catch (error) {
+                console.error('Error fetching status:', error);
+            }
+        }
+
+        function statusClass(code) {
+            if (code >= 500) return 'text-red-600';
+            if (code >= 400) return 'text-amber-600';
+            return 'text-green-600';
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function formatJsonish(value) {
+            if (value == null || value === '') return '—';
+            try {
+                return JSON.stringify(JSON.parse(value), null, 2);
+            } catch {
+                return value;
+            }
+        }
+
+        function filteredRequests() {
+            const method = document.getElementById('filterMethod').value;
+            const pathNeedle = document.getElementById('filterPath').value.trim().toLowerCase();
+            return allRequests.filter((req) => {
+                if (method && req.method !== method) return false;
+                if (pathNeedle && !req.path.toLowerCase().includes(pathNeedle)) return false;
+                return true;
+            });
+        }
+
+        function renderTraffic() {
+            const list = document.getElementById('requestList');
+            const empty = document.getElementById('emptyState');
+            const visible = filteredRequests();
+            document.getElementById('requestCount').textContent = String(visible.length);
+
+            if (visible.length === 0) {
+                list.classList.add('hidden');
+                empty.classList.remove('hidden');
+                empty.querySelector('.font-medium').textContent =
+                    allRequests.length === 0 ? 'Waiting for external API traffic…' : 'No requests match the current filters.';
+                return;
+            }
+
+            empty.classList.add('hidden');
+            list.classList.remove('hidden');
+            list.innerHTML = visible.map((req) => {
+                const isOpen = expandedIds.has(req.id);
+                const query = req.query ? `?${escapeHtml(req.query)}` : '';
+                const methodCls = methodColors[req.method] || 'bg-gray-100 text-gray-800';
+                return `
+                <article class="border border-gray-200 rounded-lg overflow-hidden ${req._flash ? 'flash-new' : ''}">
+                    <button type="button" class="w-full text-left px-3 py-2.5 flex flex-wrap items-center gap-2 hover:bg-gray-50 transition-colors"
+                            onclick="toggleExpand('${escapeHtml(req.id)}')">
+                        <span class="inline-block px-2 py-0.5 rounded text-xs font-bold ${methodCls}">${escapeHtml(req.method)}</span>
+                        <span class="mono text-sm text-gray-800 flex-1 min-w-0 truncate">${escapeHtml(req.path)}${query}</span>
+                        <span class="mono text-sm font-semibold ${statusClass(req.status_code)}">${req.status_code ?? '—'}</span>
+                        <span class="mono text-xs text-gray-500">${req.duration_ms != null ? req.duration_ms + ' ms' : ''}</span>
+                        <span class="mono text-xs text-gray-500">${escapeHtml(req.client_ip || req.remote_addr || '—')}</span>
+                        <span class="mono text-xs text-gray-400">${escapeHtml((req.timestamp || '').replace('T', ' ').slice(11, 23))}</span>
+                        <span class="text-gray-400 text-sm">${isOpen ? '▾' : '▸'}</span>
+                    </button>
+                    ${isOpen ? `
+                    <div class="border-t border-gray-100 px-3 py-3 grid gap-3 md:grid-cols-2 bg-gray-50">
+                        <div>
+                            <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Request</h3>
+                            <p class="text-xs text-gray-500 mb-1">Client IP: <span class="mono text-gray-700">${escapeHtml(req.client_ip || req.remote_addr || '—')}</span></p>
+                            <p class="text-xs text-gray-500 mb-1">Peer (Docker/proxy): <span class="mono text-gray-700">${escapeHtml(req.peer_addr || '—')}</span></p>
+                            <p class="text-xs text-gray-500 mb-1">X-Forwarded-For: <span class="mono text-gray-700">${escapeHtml(req.forwarded_for || '—')}</span></p>
+                            <p class="text-xs font-medium text-gray-600 mb-1">Headers</p>
+                            <pre class="mono text-xs bg-white border border-gray-200 rounded-md p-2 overflow-x-auto mb-2">${escapeHtml(JSON.stringify(req.headers || {}, null, 2))}</pre>
+                            <p class="text-xs font-medium text-gray-600 mb-1">Body</p>
+                            <pre class="mono text-xs bg-white border border-gray-200 rounded-md p-2 overflow-x-auto whitespace-pre-wrap">${escapeHtml(formatJsonish(req.body))}</pre>
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Response</h3>
+                            <p class="text-xs font-medium text-gray-600 mb-1">Headers</p>
+                            <pre class="mono text-xs bg-white border border-gray-200 rounded-md p-2 overflow-x-auto mb-2">${escapeHtml(JSON.stringify(req.response_headers || {}, null, 2))}</pre>
+                            <p class="text-xs font-medium text-gray-600 mb-1">Body</p>
+                            <pre class="mono text-xs bg-white border border-gray-200 rounded-md p-2 overflow-x-auto whitespace-pre-wrap">${escapeHtml(formatJsonish(req.response_body))}</pre>
+                        </div>
+                    </div>` : ''}
+                </article>`;
+            }).join('');
+
+            allRequests.forEach((req) => { req._flash = false; });
+        }
+
+        function toggleExpand(id) {
+            if (expandedIds.has(id)) expandedIds.delete(id);
+            else expandedIds.add(id);
+            renderTraffic();
+        }
+
+        function setLiveBadge(state) {
+            const badge = document.getElementById('liveBadge');
+            if (state === 'paused') {
+                badge.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-amber-100 text-amber-800';
+                badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> Paused';
+            } else if (state === 'offline') {
+                badge.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-red-100 text-red-800';
+                badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span> Offline';
+            } else {
+                badge.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-green-100 text-green-800';
+                badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Live';
+            }
+        }
+
+        async function pollTraffic() {
+            if (document.getElementById('pauseToggle').checked) {
+                setLiveBadge('paused');
+                return;
+            }
+            setLiveBadge('live');
+
+            try {
+                const response = await fetch(`/api/debug/requests?since=${latestSeq}`, {
+                    headers: uiHeaders(),
+                });
+                if (response.status === 401) {
+                    window.location.reload();
+                    return;
+                }
+                const data = await response.json();
+                if (!data.success) return;
+
+                document.getElementById('lastPoll').textContent =
+                    `seq ${data.latest_seq} · ${new Date().toLocaleTimeString()}`;
+
+                if (data.latest_seq < latestSeq) {
+                    allRequests = [];
+                    latestSeq = 0;
+                    expandedIds.clear();
+                    renderTraffic();
+                    return;
+                }
+
+                if (data.requests && data.requests.length) {
+                    const known = new Set(allRequests.map((r) => r.id));
+                    const fresh = data.requests
+                        .filter((r) => !known.has(r.id))
+                        .map((req) => ({ ...req, _flash: true }));
+                    allRequests = [...fresh, ...allRequests].slice(0, 100);
+                    latestSeq = data.latest_seq;
+                    renderTraffic();
+                } else {
+                    latestSeq = data.latest_seq;
+                }
+            } catch (err) {
+                setLiveBadge('offline');
+                console.error(err);
+            }
+        }
+
+        document.getElementById('filterMethod').addEventListener('change', renderTraffic);
+        document.getElementById('filterPath').addEventListener('input', renderTraffic);
+        document.getElementById('pauseToggle').addEventListener('change', pollTraffic);
+        document.getElementById('clearBtn').addEventListener('click', async () => {
+            await fetch('/api/debug/requests', { method: 'DELETE', headers: uiHeaders() });
+            allRequests = [];
+            latestSeq = 0;
+            expandedIds.clear();
+            renderTraffic();
+        });
+
+        document.getElementById('saveApiKeyBtn').addEventListener('click', async () => {
+            const value = document.getElementById('apiKeyInput').value;
+            try {
+                const response = await fetch('/api/settings/api-key', {
+                    method: 'PUT',
+                    headers: uiHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ api_key: value }),
+                });
+                const data = await response.json();
+                if (data.success) {
+                    apiKey = data.api_key || '';
+                    updateApiKeyStatus();
+                    showMessage(data.message, 'success');
+                } else {
+                    showMessage(data.error || 'Failed to save API key', 'error');
+                }
+            } catch (error) {
+                showMessage('Error saving API key: ' + error.message, 'error');
+            }
+        });
+
+        document.getElementById('clearApiKeyBtn').addEventListener('click', async () => {
+            document.getElementById('apiKeyInput').value = '';
+            document.getElementById('saveApiKeyBtn').click();
+        });
+
+        document.getElementById('saveSerialBtn').addEventListener('click', async () => {
+            const value = document.getElementById('serialNumberInput').value.trim();
+            try {
+                const response = await fetch('/api/settings/serial-number', {
+                    method: 'PUT',
+                    headers: uiHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ serial_number: value }),
+                });
+                const data = await response.json();
+                if (data.success) {
+                    serialNumber = data.serial_number;
+                    updateSerialStatus();
+                    showMessage(data.message, 'success');
+                } else {
+                    showMessage(data.error || 'Failed to save serial number', 'error');
+                }
+            } catch (error) {
+                showMessage('Error saving serial number: ' + error.message, 'error');
+            }
+        });
+
+        document.getElementById('resetSerialBtn').addEventListener('click', async () => {
+            document.getElementById('serialNumberInput').value = DEFAULT_SERIAL_NUMBER;
+            document.getElementById('saveSerialBtn').click();
+        });
+
+        document.getElementById('forceAgentCheckBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('forceAgentCheckBtn');
+            btn.disabled = true;
+            const original = btn.textContent;
+            btn.textContent = 'Sending…';
+            try {
+                const response = await fetch('/api/settings/force-agent-check', {
+                    method: 'POST',
+                    headers: uiHeaders(),
+                });
+                const data = await response.json();
+                if (data.success && data.delivered) {
+                    showMessage(data.message || 'Agent check completed', 'success');
+                } else {
+                    showMessage(data.error || 'Failed to contact local agent', 'error');
+                }
+            } catch (error) {
+                showMessage('Error contacting agent: ' + error.message, 'error');
+            } finally {
+                btn.textContent = original;
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('resetStateBtn').addEventListener('click', async () => {
+            const confirmed = window.confirm(
+                'Reset all application state?\n\nThis clears persistent failure, restores the light to red, clears the API traffic log, restores the default API key, and restores the default serial number.'
+            );
+            if (!confirmed) return;
+
+            const btn = document.getElementById('resetStateBtn');
+            btn.disabled = true;
+            try {
+                const response = await fetch('/api/settings/reset', {
+                    method: 'POST',
+                    headers: uiHeaders(),
+                });
+                const data = await response.json();
+                if (!data.success) {
+                    showMessage(data.error || 'Reset failed', 'error');
+                    return;
+                }
+                apiKey = data.api_key || '';
+                updateApiKeyStatus();
+                if (data.serial_number) {
+                    serialNumber = data.serial_number;
+                    updateSerialStatus();
+                }
+                updateTrafficLight(data.color, data.persistent);
+                allRequests = [];
+                latestSeq = 0;
+                expandedIds.clear();
+                renderTraffic();
+                showMessage(data.message, 'success');
+            } catch (error) {
+                showMessage('Error resetting state: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        updateApiKeyStatus();
+        updateSerialStatus();
+        updateTrafficLight(INITIAL_COLOR, INITIAL_PERSISTENT);
+        pollTraffic();
+        pollStatus();
+        setInterval(pollTraffic, POLL_MS);
+        setInterval(pollStatus, STATUS_MS);
     </script>
 </body>
-</html> 
+</html>
